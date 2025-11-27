@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Catálogo de Productos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .instagram-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #E4405F;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 10px 20px;
+            background: #f0f0f0;
+            border-radius: 25px;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .instagram-link:hover {
+            background: #E4405F;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .admin-panel {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .admin-toggle {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .admin-toggle:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+
+        .login-form, .admin-form {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .login-form.active, .admin-form.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border 0.3s;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .btn-add, .btn-login {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .btn-add:hover, .btn-login:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        .btn-logout {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+        }
+
+        .btn-logout:hover {
+            background: #dc2626;
+        }
+
+        .admin-status {
+            background: #10b981;
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .error-message.active {
+            display: block;
+        }
+
+        .productos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .producto-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            animation: slideUp 0.5s;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .producto-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+        }
+
+        .producto-imagen {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            background: #f0f0f0;
+        }
+
+        .producto-info {
+            padding: 20px;
+        }
+
+        .producto-nombre {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .producto-descripcion {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .producto-precio {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .producto-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-contactar {
+            flex: 1;
+            background: linear-gradient(135deg, #E4405F, #FF6B9D);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-contactar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(228, 64, 95, 0.4);
+        }
+
+        .btn-eliminar {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: none;
+        }
+
+        .btn-eliminar.visible {
+            display: block;
+        }
+
+        .btn-eliminar:hover {
+            background: #dc2626;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .empty-state h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            color: #666;
+        }
+
+        .password-hint {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .productos-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🛍️ Mi Catálogo de Productos</h1>
+            <p>Encuentra los mejores productos aquí</p>
+            <a href="https://instagram.com/tu_usuario" target="_blank" class="instagram-link" id="igLink">
+                📷 Contáctanos en Instagram
+            </a>
+        </header>
+
+        <div class="admin-panel">
+            <button class="admin-toggle" onclick="toggleAdmin()">🔐 Panel de Administración</button>
+            
+            <div class="login-form" id="loginForm">
+                <div class="password-hint">
+                    💡 Contraseña predeterminada: <strong>admin123</strong><br>
+                    (Cámbiala después de tu primer inicio de sesión)
+                </div>
+                <div class="error-message" id="errorMessage">
+                    ❌ Contraseña incorrecta
+                </div>
+                <form onsubmit="iniciarSesion(event)">
+                    <div class="form-group">
+                        <label>🔑 Contraseña de Administrador</label>
+                        <input type="password" id="passwordInput" required>
+                    </div>
+                    <button type="submit" class="btn-login">Iniciar Sesión</button>
+                </form>
+            </div>
+
+            <div class="admin-form" id="adminForm">
+                <div class="admin-status">
+                    ✅ Sesión Activa - Modo Administrador
+                </div>
+                <button class="btn-logout" onclick="cerrarSesion()">🚪 Cerrar Sesión</button>
+
+                <form onsubmit="agregarProducto(event)">
+                    <div class="form-group">
+                        <label>Nombre del Producto *</label>
+                        <input type="text" id="nombre" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Descripción *</label>
+                        <textarea id="descripcion" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Precio *</label>
+                        <input type="text" id="precio" placeholder="$99.99" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>URL de la Imagen *</label>
+                        <input type="url" id="imagen" placeholder="https://ejemplo.com/imagen.jpg" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Tu Usuario de Instagram (sin @)</label>
+                        <input type="text" id="instagram" placeholder="tu_usuario">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Cambiar Contraseña (dejar vacío para mantener la actual)</label>
+                        <input type="password" id="nuevaPassword" placeholder="Nueva contraseña">
+                    </div>
+                    
+                    <button type="submit" class="btn-add">✨ Agregar Producto</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="productos-grid" id="productosGrid"></div>
+    </div>
+
+    <script>
+        let productos = [];
+        let usuarioInstagram = 'tu_usuario';
+        let sesionActiva = false;
+        const PASSWORD_DEFAULT = 'admin123';
+
+        function cargarDatos() {
+            try {
+                const datosGuardados = localStorage.getItem('catalogo-productos');
+                if (datosGuardados) {
+                    productos = JSON.parse(datosGuardados);
+                }
+            } catch (error) {
+                console.log('Primera vez cargando el catálogo');
+            }
+
+            try {
+                const igGuardado = localStorage.getItem('instagram-usuario');
+                if (igGuardado) {
+                    usuarioInstagram = igGuardado;
+                    actualizarLinkInstagram();
+                }
+            } catch (error) {
+                console.log('Usando usuario de Instagram por defecto');
+            }
+
+            renderizarProductos();
+        }
+
+        function guardarDatos() {
+            try {
+                localStorage.setItem('catalogo-productos', JSON.stringify(productos));
+            } catch (error) {
+                console.error('Error al guardar:', error);
+                alert('Error al guardar los datos');
+            }
+        }
+
+        function guardarInstagram(usuario) {
+            try {
+                localStorage.setItem('instagram-usuario', usuario);
+            } catch (error) {
+                console.error('Error al guardar Instagram:', error);
+            }
+        }
+
+        function obtenerPassword() {
+            try {
+                const passwordGuardada = localStorage.getItem('admin-password');
+                return passwordGuardada || PASSWORD_DEFAULT;
+            } catch (error) {
+                return PASSWORD_DEFAULT;
+            }
+        }
+
+        function guardarPassword(nuevaPassword) {
+            try {
+                localStorage.setItem('admin-password', nuevaPassword);
+            } catch (error) {
+                console.error('Error al guardar contraseña:', error);
+            }
+        }
+
+        function toggleAdmin() {
+            const loginForm = document.getElementById('loginForm');
+            const adminForm = document.getElementById('adminForm');
+            
+            if (sesionActiva) {
+                adminForm.classList.toggle('active');
+            } else {
+                loginForm.classList.toggle('active');
+                adminForm.classList.remove('active');
+            }
+        }
+
+        function iniciarSesion(e) {
+            e.preventDefault();
+            const passwordIngresada = document.getElementById('passwordInput').value;
+            const passwordCorrecta = obtenerPassword();
+            const errorMsg = document.getElementById('errorMessage');
+
+            if (passwordIngresada === passwordCorrecta) {
+                sesionActiva = true;
+                document.getElementById('loginForm').classList.remove('active');
+                document.getElementById('adminForm').classList.add('active');
+                document.getElementById('passwordInput').value = '';
+                errorMsg.classList.remove('active');
+                renderizarProductos();
+            } else {
+                errorMsg.classList.add('active');
+                setTimeout(() => errorMsg.classList.remove('active'), 3000);
+            }
+        }
+
+        function cerrarSesion() {
+            sesionActiva = false;
+            document.getElementById('adminForm').classList.remove('active');
+            renderizarProductos();
+        }
+
+        function agregarProducto(e) {
+            e.preventDefault();
+            
+            const nuevoProducto = {
+                id: Date.now(),
+                nombre: document.getElementById('nombre').value,
+                descripcion: document.getElementById('descripcion').value,
+                precio: document.getElementById('precio').value,
+                imagen: document.getElementById('imagen').value
+            };
+
+            const igInput = document.getElementById('instagram').value.trim();
+            if (igInput) {
+                usuarioInstagram = igInput;
+                guardarInstagram(usuarioInstagram);
+                actualizarLinkInstagram();
+            }
+
+            const nuevaPassword = document.getElementById('nuevaPassword').value.trim();
+            if (nuevaPassword) {
+                guardarPassword(nuevaPassword);
+                alert('✅ Contraseña actualizada correctamente');
+            }
+
+            productos.push(nuevoProducto);
+            guardarDatos();
+            renderizarProductos();
+            
+            e.target.reset();
+        }
+
+        function eliminarProducto(id) {
+            if (confirm('¿Estás seguro de eliminar este producto?')) {
+                productos = productos.filter(p => p.id !== id);
+                guardarDatos();
+                renderizarProductos();
+            }
+        }
+
+        function contactarPorProducto(producto) {
+            const mensaje = `Hola! Me interesa el producto: ${producto.nombre} - ${producto.precio}`;
+            const url = `https://instagram.com/${usuarioInstagram}`;
+            window.open(url, '_blank');
+        }
+
+        function actualizarLinkInstagram() {
+            const link = document.getElementById('igLink');
+            link.href = `https://instagram.com/${usuarioInstagram}`;
+            link.innerHTML = `📷 @${usuarioInstagram}`;
+        }
+
+        function renderizarProductos() {
+            const grid = document.getElementById('productosGrid');
+            
+            if (productos.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No hay productos aún</h3>
+                        <p>Inicia sesión como administrador para agregar productos</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = productos.map(producto => `
+                <div class="producto-card">
+                    <img src="${producto.imagen}" alt="${producto.nombre}" class="producto-imagen" onerror="this.src='https://via.placeholder.com/300x250?text=Imagen+No+Disponible'">
+                    <div class="producto-info">
+                        <div class="producto-nombre">${producto.nombre}</div>
+                        <div class="producto-descripcion">${producto.descripcion}</div>
+                        <div class="producto-precio">${producto.precio}</div>
+                        <div class="producto-actions">
+                            <button class="btn-contactar" onclick='contactarPorProducto(${JSON.stringify(producto)})'>
+                                Contactar por IG
+                            </button>
+                            <button class="btn-eliminar ${sesionActiva ? 'visible' : ''}" onclick="eliminarProducto(${producto.id})">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        cargarDatos();
+    </script>
+</body>
+</html>
