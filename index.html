@@ -186,6 +186,19 @@
             display: block;
         }
 
+        .success-message {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .success-message.active {
+            display: block;
+        }
+
         .productos-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -313,6 +326,22 @@
             text-align: center;
         }
 
+        .reset-info {
+            background: #e0e7ff;
+            color: #3730a3;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+
+        .reset-info code {
+            background: #c7d2fe;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
         @media (max-width: 768px) {
             .productos-grid {
                 grid-template-columns: 1fr;
@@ -348,15 +377,25 @@
                     </div>
                     <button type="submit" class="btn-login">Iniciar Sesión</button>
                 </form>
+
+                <div class="reset-info">
+                    <strong>¿Olvidaste tu contraseña?</strong><br>
+                    Presiona F12, ve a Console y escribe:<br>
+                    <code>localStorage.setItem('admin-password', 'admin123')</code><br>
+                    Luego recarga la página.
+                </div>
             </div>
 
             <div class="admin-form" id="adminForm">
                 <div class="admin-status">
                     ✅ Sesión Activa - Modo Administrador
                 </div>
+                <div class="success-message" id="successMessage">
+                    ✅ Producto agregado correctamente
+                </div>
                 <button class="btn-logout" onclick="cerrarSesion()">🚪 Cerrar Sesión</button>
 
-                <form onsubmit="agregarProducto(event)">
+                <form onsubmit="agregarProducto(event)" id="productoForm">
                     <div class="form-group">
                         <label>Nombre del Producto *</label>
                         <input type="text" id="nombre" required>
@@ -396,68 +435,80 @@
     </div>
 
     <script>
+        // Variables globales
         let productos = [];
         let usuarioInstagram = 'tu_usuario';
         let sesionActiva = false;
         const PASSWORD_DEFAULT = 'admin123';
 
+        // Cargar datos al iniciar
         function cargarDatos() {
-            try {
-                const datosGuardados = localStorage.getItem('catalogo-productos');
-                if (datosGuardados) {
-                    productos = JSON.parse(datosGuardados);
+            console.log('Cargando datos...');
+            
+            // Cargar productos
+            const productosGuardados = localStorage.getItem('catalogo-productos');
+            if (productosGuardados) {
+                try {
+                    productos = JSON.parse(productosGuardados);
+                    console.log('Productos cargados:', productos.length);
+                } catch (error) {
+                    console.error('Error al cargar productos:', error);
+                    productos = [];
                 }
-            } catch (error) {
-                console.log('Primera vez cargando el catálogo');
             }
 
-            try {
-                const igGuardado = localStorage.getItem('instagram-usuario');
-                if (igGuardado) {
-                    usuarioInstagram = igGuardado;
-                    actualizarLinkInstagram();
-                }
-            } catch (error) {
-                console.log('Usando usuario de Instagram por defecto');
+            // Cargar Instagram
+            const igGuardado = localStorage.getItem('instagram-usuario');
+            if (igGuardado) {
+                usuarioInstagram = igGuardado;
+                actualizarLinkInstagram();
             }
 
             renderizarProductos();
         }
 
+        // Guardar productos
         function guardarDatos() {
             try {
                 localStorage.setItem('catalogo-productos', JSON.stringify(productos));
+                console.log('Productos guardados correctamente:', productos.length);
+                return true;
             } catch (error) {
                 console.error('Error al guardar:', error);
-                alert('Error al guardar los datos');
+                alert('Error al guardar los datos. Verifica que tu navegador permita localStorage.');
+                return false;
             }
         }
 
+        // Guardar Instagram
         function guardarInstagram(usuario) {
             try {
                 localStorage.setItem('instagram-usuario', usuario);
+                console.log('Instagram guardado:', usuario);
             } catch (error) {
                 console.error('Error al guardar Instagram:', error);
             }
         }
 
+        // Obtener contraseña
         function obtenerPassword() {
-            try {
-                const passwordGuardada = localStorage.getItem('admin-password');
-                return passwordGuardada || PASSWORD_DEFAULT;
-            } catch (error) {
-                return PASSWORD_DEFAULT;
-            }
+            const passwordGuardada = localStorage.getItem('admin-password');
+            return passwordGuardada || PASSWORD_DEFAULT;
         }
 
+        // Guardar contraseña
         function guardarPassword(nuevaPassword) {
             try {
                 localStorage.setItem('admin-password', nuevaPassword);
+                console.log('Contraseña actualizada');
+                return true;
             } catch (error) {
                 console.error('Error al guardar contraseña:', error);
+                return false;
             }
         }
 
+        // Toggle panel admin
         function toggleAdmin() {
             const loginForm = document.getElementById('loginForm');
             const adminForm = document.getElementById('adminForm');
@@ -470,6 +521,7 @@
             }
         }
 
+        // Iniciar sesión
         function iniciarSesion(e) {
             e.preventDefault();
             const passwordIngresada = document.getElementById('passwordInput').value;
@@ -483,18 +535,22 @@
                 document.getElementById('passwordInput').value = '';
                 errorMsg.classList.remove('active');
                 renderizarProductos();
+                console.log('Sesión iniciada correctamente');
             } else {
                 errorMsg.classList.add('active');
                 setTimeout(() => errorMsg.classList.remove('active'), 3000);
             }
         }
 
+        // Cerrar sesión
         function cerrarSesion() {
             sesionActiva = false;
             document.getElementById('adminForm').classList.remove('active');
             renderizarProductos();
+            console.log('Sesión cerrada');
         }
 
+        // Agregar producto
         function agregarProducto(e) {
             e.preventDefault();
             
@@ -506,6 +562,9 @@
                 imagen: document.getElementById('imagen').value
             };
 
+            console.log('Agregando producto:', nuevoProducto);
+
+            // Actualizar Instagram si se proporcionó
             const igInput = document.getElementById('instagram').value.trim();
             if (igInput) {
                 usuarioInstagram = igInput;
@@ -513,39 +572,56 @@
                 actualizarLinkInstagram();
             }
 
+            // Cambiar contraseña si se proporcionó
             const nuevaPassword = document.getElementById('nuevaPassword').value.trim();
             if (nuevaPassword) {
-                guardarPassword(nuevaPassword);
-                alert('✅ Contraseña actualizada correctamente');
+                if (guardarPassword(nuevaPassword)) {
+                    alert('✅ Contraseña actualizada correctamente');
+                }
             }
 
+            // Agregar producto al array
             productos.push(nuevoProducto);
-            guardarDatos();
-            renderizarProductos();
             
-            e.target.reset();
+            // Guardar en localStorage
+            if (guardarDatos()) {
+                // Mostrar mensaje de éxito
+                const successMsg = document.getElementById('successMessage');
+                successMsg.classList.add('active');
+                setTimeout(() => successMsg.classList.remove('active'), 3000);
+                
+                // Limpiar formulario
+                document.getElementById('productoForm').reset();
+                
+                // Renderizar productos
+                renderizarProductos();
+            }
         }
 
+        // Eliminar producto
         function eliminarProducto(id) {
             if (confirm('¿Estás seguro de eliminar este producto?')) {
                 productos = productos.filter(p => p.id !== id);
                 guardarDatos();
                 renderizarProductos();
+                console.log('Producto eliminado:', id);
             }
         }
 
+        // Contactar por producto
         function contactarPorProducto(producto) {
-            const mensaje = `Hola! Me interesa el producto: ${producto.nombre} - ${producto.precio}`;
             const url = `https://instagram.com/${usuarioInstagram}`;
             window.open(url, '_blank');
         }
 
+        // Actualizar link de Instagram
         function actualizarLinkInstagram() {
             const link = document.getElementById('igLink');
             link.href = `https://instagram.com/${usuarioInstagram}`;
             link.innerHTML = `📷 @${usuarioInstagram}`;
         }
 
+        // Renderizar productos
         function renderizarProductos() {
             const grid = document.getElementById('productosGrid');
             
@@ -567,7 +643,7 @@
                         <div class="producto-descripcion">${producto.descripcion}</div>
                         <div class="producto-precio">${producto.precio}</div>
                         <div class="producto-actions">
-                            <button class="btn-contactar" onclick='contactarPorProducto(${JSON.stringify(producto)})'>
+                            <button class="btn-contactar" onclick='contactarPorProducto(${JSON.stringify(producto).replace(/'/g, "&apos;")})'>
                                 Contactar por IG
                             </button>
                             <button class="btn-eliminar ${sesionActiva ? 'visible' : ''}" onclick="eliminarProducto(${producto.id})">
@@ -577,10 +653,18 @@
                     </div>
                 </div>
             `).join('');
+
+            console.log('Productos renderizados:', productos.length);
         }
 
-        cargarDatos();
+        // Iniciar aplicación
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('Aplicación iniciada');
+            cargarDatos();
+        });
+
+        // Debug - Ver estado del localStorage
+        console.log('LocalStorage disponible:', typeof(Storage) !== "undefined");
     </script>
 </body>
-
 </html>
